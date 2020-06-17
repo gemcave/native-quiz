@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import Button, { ButtonContainer } from '../components/Button';
+import Alert from '../components/Alert';
 
 import TEMP_QUESTIONS from '../data/computers';
 
@@ -28,15 +29,16 @@ const Quiz = () => {
     correctCount: 0,
     totalCount: TEMP_QUESTIONS.length,
     activeQuestionIdx: 0,
+    answered: false,
+    answerCorrect: false,
   });
 
   useEffect(() => {
-    if (state.correctCount) {
-      nextQuestion();
-    }
+    const interval = setTimeout(() => nextQuestion(), 750);
 
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.correctCount]);
+  }, [state.answerCorrect]);
 
   console.log(state);
   let question = TEMP_QUESTIONS[state.activeQuestionIdx];
@@ -44,24 +46,29 @@ const Quiz = () => {
   const nextQuestion = () => {
     setState((prev) => {
       let nextIdx = prev.activeQuestionIdx + 1;
-      console.log('nextIdx ', nextIdx);
+
       if (nextIdx >= state.totalCount) {
         nextIdx = 0;
       }
       return {
         ...prev,
         activeQuestionIdx: nextIdx,
+        answered: !prev.answered,
       };
     });
   };
 
   const answerQuestion = (correct) => {
     setState((prevState) => {
-      let nextState = 0;
+      const nextState = { answered: true };
+
       if (correct) {
-        nextState = state.correctCount + 1;
+        nextState.correctCount = state.correctCount + 1;
+        nextState.answerCorrect = true;
+      } else {
+        nextState.answerCorrect = false;
       }
-      return { ...prevState, correctCount: nextState };
+      return { ...prevState, ...nextState };
     });
   };
 
@@ -85,6 +92,7 @@ const Quiz = () => {
           style={styles.text}
         >{`${state.correctCount}/${state.totalCount}`}</Text>
       </SafeAreaView>
+      <Alert correct={state.answerCorrect} visible={state.answered} />
     </View>
   );
 };
